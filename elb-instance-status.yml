@@ -1,0 +1,16 @@
+---
+
+- name: Ensure there are at least 30% free inodes on /
+  command: test $(df -i | grep "/$" | xargs | cut -d ' ' -f 5 | sed "s/%//") -lt 70
+
+- name: Ensure there are at least 30% free inodes on /var/lib/docker
+  command: test $(df -i | grep "/var/lib/docker$" | xargs | cut -d ' ' -f 5 | sed "s/%//") -lt 70
+
+- name: Ensure there is at least 30% free disk space on /var/lib/docker
+  command: test $(df | grep "/var/lib/docker$" | xargs | cut -d ' ' -f 5 | sed "s/%//") -lt 70
+
+- name: Ensure volume on /var/lib/docker is mounted
+  command: mount | grep -q /var/lib/docker
+
+- name: Ensure docker can start a small container
+  command: docker run --rm alpine /bin/sh -c "echo testing123" | grep -q testing123
