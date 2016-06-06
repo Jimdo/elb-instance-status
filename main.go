@@ -17,6 +17,7 @@ import (
 
 	"github.com/Luzifer/rconfig"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/robfig/cron"
 )
 
@@ -30,7 +31,7 @@ var (
 
 	version = "dev"
 
-	checks               = []checkCommand{}
+	checks               = map[string]checkCommand{}
 	checkResults         = map[string]*checkResult{}
 	checkResultsLock     sync.RWMutex
 	lastResultRegistered time.Time
@@ -78,17 +79,19 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/status", handleELBHealthCheck)
+	r.Handle("/metrics", prometheus.Handler())
 	http.ListenAndServe(cfg.Listen, r)
 }
 
 func spawnChecks() {
-	for i := range checks {
-		go executeAndRegisterCheck(i)
+	for id := range checks {
+		go executeAndRegisterCheck(id)
 	}
 }
 
-func executeAndRegisterCheck(checkIndex int) {
-	check := checks[checkIndex]
+func executeAndRegisterCheck(checkID string) {
+	check := checks[checkID]
+	start := time.Now()
 
 	cmd := exec.Command("/bin/bash", "-c", check.Command)
 	err := cmd.Run()
@@ -97,20 +100,27 @@ func executeAndRegisterCheck(checkIndex int) {
 
 	checkResultsLock.Lock()
 
-	if _, ok := checkResults[check.Name]; !ok {
-		checkResults[check.Name] = &checkResult{
+	if _, ok := checkResults[checkID]; !ok {
+		checkResults[checkID] = &checkResult{
 			Check: check,
 		}
 	}
 
-	if success == checkResults[check.Name].IsSuccess {
-		checkResults[check.Name].Streak++
+	if success == checkResults[checkID].IsSuccess {
+		checkResults[checkID].Streak++
 	} else {
-		checkResults[check.Name].IsSuccess = success
-		checkResults[check.Name].Streak = 1
+		checkResults[checkID].IsSuccess = success
+		checkResults[checkID].Streak = 1
 	}
 
 	lastResultRegistered = time.Now()
+
+	if success {
+		checkPassing.WithLabelValues(checkID).Set(1)
+	} else {
+		checkPassing.WithLabelValues(checkID).Set(0)
+	}
+	checkExecutionTime.WithLabelValues(checkID).Observe(float64(time.Since(start).Nanoseconds()) / float64(time.Microsecond))
 
 	checkResultsLock.Unlock()
 }
@@ -121,7 +131,7 @@ func handleELBHealthCheck(res http.ResponseWriter, r *http.Request) {
 	buf := bytes.NewBuffer([]byte{})
 
 	checkResultsLock.RLock()
-	for cn, cr := range checkResults {
+	for _, cr := range checkResults {
 		state := ""
 		switch {
 		case cr.IsSuccess:
@@ -134,15 +144,17 @@ func handleELBHealthCheck(res http.ResponseWriter, r *http.Request) {
 			state = "CRIT"
 			healthy = false
 		}
-		fmt.Fprintf(buf, "[%s] %s\n", state, cn)
+		fmt.Fprintf(buf, "[%s] %s\n", state, cr.Check.Name)
 	}
 	checkResultsLock.RUnlock()
 
 	res.Header().Set("X-Collection-Parsed-In", strconv.FormatInt(time.Since(start).Nanoseconds()/int64(time.Microsecond), 10)+"ms")
 	res.Header().Set("X-Last-Result-Registered-At", lastResultRegistered.Format(time.RFC1123))
 	if healthy {
+		currentStatusCode.Set(http.StatusOK)
 		res.WriteHeader(http.StatusOK)
 	} else {
+		currentStatusCode.Set(http.StatusInternalServerError)
 		res.WriteHeader(http.StatusInternalServerError)
 	}
 
