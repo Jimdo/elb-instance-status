@@ -1,3 +1,7 @@
+# 0.2.1 / 2016-06-06
+
+  * Vendored dependencies
+
 # 0.2.0 / 2016-06-06
 
   * Expose metrics about checks for prometheus
