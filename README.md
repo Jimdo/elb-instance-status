@@ -38,17 +38,21 @@ Content-Type: text/plain; charset=utf-8
 The checks are defined in a quite simple yaml file:
 
 ```yaml
-- name: Ensure there are at least 30% free inodes on /
+---
+root_free_inodes:
+  name: Ensure there are at least 30% free inodes on /
   command: test $(df -i | grep "/$" | xargs | cut -d ' ' -f 5 | sed "s/%//") -lt 70
-
-- name: Ensure volume on /var/lib/docker is mounted
+ 
+lib_docker_mounted:
+  name: Ensure volume on /var/lib/docker is mounted
   command: mount | grep -q /var/lib/docker
-
-- name: Ensure docker can start a small container
+ 
+docker_run:
+  name: Ensure docker can start a small container
   command: docker run --rm alpine /bin/sh -c "echo testing123" | grep -q testing123
 ```
 
-They consist of three keys:
+They consist of an unique ID and three keys for each check:
 
 - `name` (required), A descriptive name of the check (do *not* use the same name twice!)
 - `command` (required), The check itself. Needs to have exit code 0 if everything is fine and any other if somthing is wrong.  
