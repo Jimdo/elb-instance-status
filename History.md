@@ -1,3 +1,9 @@
+# 0.3.0 / 2016-07-22
+
+  * make check interval and config refresh interval configurable
+  * enforce checks to quit before they are started again
+  * support URLs as check source
+
 # 0.2.1 / 2016-06-06
 
   * Vendored dependencies
