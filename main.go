@@ -15,12 +15,12 @@ import (
 	"sync"
 	"time"
 
-	"gopkg.in/yaml.v2"
-
 	"github.com/Luzifer/rconfig"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/robfig/cron"
+	"golang.org/x/net/context"
+	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -123,17 +123,35 @@ func main() {
 }
 
 func spawnChecks() {
+	ctx, _ := context.WithTimeout(context.Background(), 59*time.Second)
+
 	for id := range checks {
-		go executeAndRegisterCheck(id)
+		go executeAndRegisterCheck(ctx, id)
 	}
 }
 
-func executeAndRegisterCheck(checkID string) {
+func executeAndRegisterCheck(ctx context.Context, checkID string) {
 	check := checks[checkID]
 	start := time.Now()
 
 	cmd := exec.Command("/bin/bash", "-c", check.Command)
-	err := cmd.Run()
+	err := cmd.Start()
+
+	if err == nil {
+		cmdDone := make(chan error)
+		go func(cmdDone chan error, cmd *exec.Cmd) { cmdDone <- cmd.Wait() }(cmdDone, cmd)
+		loop := true
+		for loop {
+			select {
+			case err = <-cmdDone:
+				loop = false
+			case <-ctx.Done():
+				log.Printf("Execution of check '%s' was killed through context timeout.", checkID)
+				cmd.Process.Kill()
+				time.Sleep(time.Millisecond)
+			}
+		}
+	}
 
 	success := err == nil
 
