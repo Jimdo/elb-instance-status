@@ -65,10 +65,7 @@ func init() {
 }
 
 func loadChecks() error {
-	var (
-		rawChecks []byte
-		err       error
-	)
+	var rawChecks []byte
 
 	if _, err := os.Stat(cfg.CheckDefinitionsFile); err == nil {
 		// We got a local file, read it
@@ -95,7 +92,7 @@ func loadChecks() error {
 	}
 
 	tmpResult := map[string]checkCommand{}
-	err = yaml.Unmarshal(rawChecks, &tmpResult)
+	err := yaml.Unmarshal(rawChecks, &tmpResult)
 
 	if err == nil {
 		checks = tmpResult
