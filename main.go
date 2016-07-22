@@ -2,11 +2,13 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"strconv"
@@ -23,7 +25,7 @@ import (
 
 var (
 	cfg = struct {
-		CheckDefinitionsFile string `flag:"check-definitions-file,c" default:"/etc/elb-instance-status.yml" description:"File containing checks to perform for instance health"`
+		CheckDefinitionsFile string `flag:"check-definitions-file,c" default:"/etc/elb-instance-status.yml" description:"File or URL containing checks to perform for instance health"`
 		UnhealthyThreshold   int64  `flag:"unhealthy-threshold" default:"5" description:"How often does a check have to fail to mark the machine unhealthy"`
 		Listen               string `flag:"listen" default:":3000" description:"IP/Port to listen on for ELB health checks"`
 		VersionAndExit       bool   `flag:"version" default:"false" description:"Print version and exit"`
@@ -31,7 +33,7 @@ var (
 
 	version = "dev"
 
-	checks               = map[string]checkCommand{}
+	checks               map[string]checkCommand
 	checkResults         = map[string]*checkResult{}
 	checkResultsLock     sync.RWMutex
 	lastResultRegistered time.Time
@@ -59,11 +61,43 @@ func init() {
 }
 
 func loadChecks() error {
-	rawChecks, err := ioutil.ReadFile(cfg.CheckDefinitionsFile)
-	if err != nil {
-		return err
+	var (
+		rawChecks []byte
+		err       error
+	)
+
+	if _, err := os.Stat(cfg.CheckDefinitionsFile); err == nil {
+		// We got a local file, read it
+		rawChecks, err = ioutil.ReadFile(cfg.CheckDefinitionsFile)
+		if err != nil {
+			return err
+		}
+	} else {
+		// Check whether we got an URL
+		if _, err := url.Parse(cfg.CheckDefinitionsFile); err != nil {
+			return errors.New("Definitions file is neither a local file nor a URL")
+		}
+
+		// We got an URL, fetch and read it
+		resp, err := http.Get(cfg.CheckDefinitionsFile)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		rawChecks, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
 	}
-	return yaml.Unmarshal(rawChecks, &checks)
+
+	tmpResult := map[string]checkCommand{}
+	err = yaml.Unmarshal(rawChecks, &tmpResult)
+
+	if err == nil {
+		checks = tmpResult
+	}
+
+	return err
 }
 
 func main() {
@@ -73,6 +107,11 @@ func main() {
 
 	c := cron.New()
 	c.AddFunc("@every 1m", spawnChecks)
+	c.AddFunc("@every 10m", func() {
+		if err := loadChecks(); err != nil {
+			log.Printf("Unable to refresh checks: %s", err)
+		}
+	})
 	c.Start()
 
 	spawnChecks()
