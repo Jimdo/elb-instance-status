@@ -1,7 +1,7 @@
 {
-	"ImportPath": "github.com/Luzifer/elb-instance-status",
+	"ImportPath": "github.com/Jimdo/elb-instance-status",
 	"GoVersion": "go1.6",
-	"GodepVersion": "v62",
+	"GodepVersion": "v74",
 	"Deps": [
 		{
 			"ImportPath": "bitbucket.org/ww/goautoneg",
@@ -10,8 +10,8 @@
 		},
 		{
 			"ImportPath": "github.com/Luzifer/rconfig",
-			"Comment": "v1.0.3-2-g2677653",
-			"Rev": "26776536e61487fdffbd3ce87f827177a5903f98"
+			"Comment": "v1.1.0",
+			"Rev": "c27bd3a64b5b19556914d9fec69922cf3852d585"
 		},
 		{
 			"ImportPath": "github.com/beorn7/perks/quantile",
@@ -63,6 +63,10 @@
 		{
 			"ImportPath": "github.com/spf13/pflag",
 			"Rev": "b084184666e02084b8ccb9b704bf0d79c466eb1d"
+		},
+		{
+			"ImportPath": "golang.org/x/net/context",
+			"Rev": "fa33dc7b893a6db61a44637ced689a85ee5208c4"
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
