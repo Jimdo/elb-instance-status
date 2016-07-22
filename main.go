@@ -27,8 +27,12 @@ var (
 	cfg = struct {
 		CheckDefinitionsFile string `flag:"check-definitions-file,c" default:"/etc/elb-instance-status.yml" description:"File or URL containing checks to perform for instance health"`
 		UnhealthyThreshold   int64  `flag:"unhealthy-threshold" default:"5" description:"How often does a check have to fail to mark the machine unhealthy"`
-		Listen               string `flag:"listen" default:":3000" description:"IP/Port to listen on for ELB health checks"`
-		VersionAndExit       bool   `flag:"version" default:"false" description:"Print version and exit"`
+
+		CheckInterval         time.Duration `flag:"check-interval" default:"1m" description:"How often to execute checks (do not set below 10s!)"`
+		ConfigRefreshInterval time.Duration `flag:"config-refresh" default:"10m" description:"How often to update checks from definitions file / url"`
+
+		Listen         string `flag:"listen" default:":3000" description:"IP/Port to listen on for ELB health checks"`
+		VersionAndExit bool   `flag:"version" default:"false" description:"Print version and exit"`
 	}{}
 
 	version = "dev"
@@ -106,8 +110,8 @@ func main() {
 	}
 
 	c := cron.New()
-	c.AddFunc("@every 1m", spawnChecks)
-	c.AddFunc("@every 10m", func() {
+	c.AddFunc("@every "+cfg.CheckInterval.String(), spawnChecks)
+	c.AddFunc("@every "+cfg.ConfigRefreshInterval.String(), func() {
 		if err := loadChecks(); err != nil {
 			log.Printf("Unable to refresh checks: %s", err)
 		}
@@ -123,7 +127,7 @@ func main() {
 }
 
 func spawnChecks() {
-	ctx, _ := context.WithTimeout(context.Background(), 59*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), cfg.CheckInterval-time.Second)
 
 	for id := range checks {
 		go executeAndRegisterCheck(ctx, id)
