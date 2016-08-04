@@ -1,3 +1,9 @@
+# 0.4.0 / 2016-08-04
+
+  * `stderr` output will be sent to `stderr` of the program all the time which helps debugging failing commands
+  * `stdout` can be attached to `stdout` of the program when `--verbose` flag is passed
+  * All commands are now executed using `bash -e -o pipefail -c '<command>'` to make them more reliable and let them fail fast in case of an error
+
 # 0.3.0 / 2016-07-22
 
   * make check interval and config refresh interval configurable
