@@ -31,6 +31,8 @@ var (
 		CheckInterval         time.Duration `flag:"check-interval" default:"1m" description:"How often to execute checks (do not set below 10s!)"`
 		ConfigRefreshInterval time.Duration `flag:"config-refresh" default:"10m" description:"How often to update checks from definitions file / url"`
 
+		Verbose bool `flag:"verbose,v" default:"false" description:"Attach stdout of the executed commands"`
+
 		Listen         string `flag:"listen" default:":3000" description:"IP/Port to listen on for ELB health checks"`
 		VersionAndExit bool   `flag:"version" default:"false" description:"Print version and exit"`
 	}{}
@@ -136,6 +138,10 @@ func executeAndRegisterCheck(ctx context.Context, checkID string) {
 	start := time.Now()
 
 	cmd := exec.Command("/bin/bash", "-c", check.Command)
+	cmd.Stderr = os.Stderr
+	if cfg.Verbose {
+		cmd.Stdout = os.Stdout
+	}
 	err := cmd.Start()
 
 	if err == nil {
