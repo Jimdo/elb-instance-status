@@ -1,3 +1,7 @@
+# 0.4.1 / 2016-10-11
+
+  * Push builds to GH releases
+
 # 0.4.0 / 2016-08-04
 
   * `stderr` output will be sent to `stderr` of the program all the time which helps debugging failing commands
