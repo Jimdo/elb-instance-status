@@ -6,6 +6,11 @@ ARCHS="linux/386 linux/amd64 linux/arm darwin/amd64 darwin/386"
 
 set -e
 
+if [ -z "${TRAVIS_TAG}" ]; then
+  echo "Not executing for non tag, but this is no failure."
+  exit 0
+fi
+
 if [ -z "${VERSION}" ]; then
 	echo "No tag present, stopping build now."
 	exit 0
