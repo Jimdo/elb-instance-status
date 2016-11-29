@@ -177,6 +177,10 @@ func executeAndRegisterCheck(ctx context.Context, checkID string) {
 		checkResults[checkID].Streak = 1
 	}
 
+	if !success {
+		log.Printf("Check %q failed, streak now at %d, error was: %s", checkID, checkResults[checkID].Streak, err)
+	}
+
 	lastResultRegistered = time.Now()
 
 	if success {
