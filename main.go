@@ -138,9 +138,9 @@ func executeAndRegisterCheck(ctx context.Context, checkID string) {
 	start := time.Now()
 
 	cmd := exec.Command("/bin/bash", "-e", "-o", "pipefail", "-c", check.Command)
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = newPrefixedLogger(os.Stderr, checkID+":STDERR")
 	if cfg.Verbose {
-		cmd.Stdout = os.Stdout
+		cmd.Stdout = newPrefixedLogger(os.Stderr, checkID+":STDOUT")
 	}
 	err := cmd.Start()
 
