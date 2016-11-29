@@ -138,9 +138,9 @@ func executeAndRegisterCheck(ctx context.Context, checkID string) {
 	start := time.Now()
 
 	cmd := exec.Command("/bin/bash", "-e", "-o", "pipefail", "-c", check.Command)
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = newPrefixedLogger(os.Stderr, checkID+":STDERR")
 	if cfg.Verbose {
-		cmd.Stdout = os.Stdout
+		cmd.Stdout = newPrefixedLogger(os.Stderr, checkID+":STDOUT")
 	}
 	err := cmd.Start()
 
@@ -175,6 +175,10 @@ func executeAndRegisterCheck(ctx context.Context, checkID string) {
 	} else {
 		checkResults[checkID].IsSuccess = success
 		checkResults[checkID].Streak = 1
+	}
+
+	if !success {
+		log.Printf("Check %q failed, streak now at %d, error was: %s", checkID, checkResults[checkID].Streak, err)
 	}
 
 	lastResultRegistered = time.Now()
