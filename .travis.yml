@@ -4,4 +4,4 @@ go:
   - 1.7
 
 script:
-  - ./publish.sh
+  - make ci
