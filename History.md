@@ -1,3 +1,8 @@
+# 0.5.0 / 2016-11-29
+
+  * Add line prefixing to see which check logs lines
+  * Log failing checks
+
 # 0.4.1 / 2016-10-11
 
   * Push builds to GH releases
