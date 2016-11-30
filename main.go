@@ -155,7 +155,7 @@ func executeAndRegisterCheck(ctx context.Context, checkID string) {
 			case <-ctx.Done():
 				log.Printf("Execution of check '%s' was killed through context timeout.", checkID)
 				cmd.Process.Kill()
-				time.Sleep(time.Millisecond)
+				time.Sleep(100 * time.Millisecond)
 			}
 		}
 	}
