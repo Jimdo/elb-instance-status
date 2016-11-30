@@ -1,3 +1,7 @@
+# 0.5.1 / 2016-11-30
+
+  * Fix: Give the process kill a bit more time to succeed
+
 # 0.5.0 / 2016-11-29
 
   * Add line prefixing to see which check logs lines
