@@ -3,5 +3,8 @@ language: go
 go:
   - 1.7
 
+env:
+  - ARCHS=linux/amd64
+
 script:
   - make ci

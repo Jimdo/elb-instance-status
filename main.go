@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"strconv"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/Luzifer/rconfig"
@@ -138,6 +139,11 @@ func executeAndRegisterCheck(ctx context.Context, checkID string) {
 	start := time.Now()
 
 	cmd := exec.Command("/bin/bash", "-e", "-o", "pipefail", "-c", check.Command)
+
+	// Enable process groups in to order to be able to kill a whole group
+	// instead of a single process
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
 	cmd.Stderr = newPrefixedLogger(os.Stderr, checkID+":STDERR")
 	if cfg.Verbose {
 		cmd.Stdout = newPrefixedLogger(os.Stderr, checkID+":STDOUT")
@@ -154,7 +160,11 @@ func executeAndRegisterCheck(ctx context.Context, checkID string) {
 				loop = false
 			case <-ctx.Done():
 				log.Printf("Execution of check '%s' was killed through context timeout.", checkID)
-				cmd.Process.Kill()
+
+				// Kill the process group to make sure that all child processes are killed too
+				// and to avoid deadlocks.
+				syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+
 				time.Sleep(100 * time.Millisecond)
 			}
 		}
