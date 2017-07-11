@@ -1,8 +1,7 @@
-[![Download on GoBuilder](http://badge.luzifer.io/v1/badge?title=Download%20on&text=GoBuilder)](https://gobuilder.me/github.com/Luzifer/elb-instance-status)
 [![License: Apache v2.0](https://badge.luzifer.io/v1/badge?color=5d79b5&title=license&text=Apache+v2.0)](http://www.apache.org/licenses/LICENSE-2.0)
-[![Go Report Card](https://goreportcard.com/badge/github.com/Luzifer/elb-instance-status)](https://goreportcard.com/report/github.com/Luzifer/elb-instance-status)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Jimdo/elb-instance-status)](https://goreportcard.com/report/github.com/Jimdo/elb-instance-status)
 
-# Luzifer / elb-instance-status
+# Jimdo / elb-instance-status
 
 `elb-instance-status` is a small daemon you can run on any instance on an autoscaling group. It periodically executes commands using `/bin/bash` and checks for their exit status (0 = fine, everything else = not fine). The collected check results are exposed using an HTTP listener which then can be used by an ELB health check for that machine. This enables your autoscaling-group to react to custom health checks on your machine.
 

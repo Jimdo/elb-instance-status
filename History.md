@@ -1,3 +1,7 @@
+# 0.5.3 / 2017-07-11
+
+  * Build and release using goreleaser
+
 # 0.5.1 / 2016-11-30
 
   * Fix: Give the process kill a bit more time to succeed
