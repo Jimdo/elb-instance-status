@@ -1,8 +1,9 @@
 builds:
-  goos:
-    - linux
-  goarch:
-    - amd64
+  - 
+    goos:
+      - linux
+    goarch:
+      - amd64
 archive:
   name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
   format: binary
