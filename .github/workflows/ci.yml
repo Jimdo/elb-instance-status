@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+  schedule:
+  - cron: '15 0 * * 4'
+
+jobs:
+  build:
+    permissions:
+      id-token: write
+      contents: read
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Get credentials
+      uses: hashicorp/vault-action@v2.4.0
+      with:
+        url: https://vault.jimdo-platform.net
+        method: jwt
+        role: wonderland_travis_migration
+        secrets: |
+          secret/wonderland/github-publish GITHUB_TOKEN ;
+          
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '1.17'
+
+    - name: Test
+      run: make test
+
+    - name: Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      run: make release
