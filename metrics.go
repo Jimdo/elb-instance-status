@@ -44,7 +44,27 @@ func init() {
 		Help:        "Timespan in µs the execution of the check took",
 	}, dynamicLabels)
 
-	checkPassing = prometheus.MustRegisterOrGet(cp).(*prometheus.GaugeVec)
-	currentStatusCode = prometheus.MustRegisterOrGet(csc).(prometheus.Gauge)
-	checkExecutionTime = prometheus.MustRegisterOrGet(cet).(*prometheus.SummaryVec)
+	if err := prometheus.Register(cp); err != nil {
+		if are, ok := err.(prometheus.AlreadyRegisteredError); ok {
+			checkPassing = are.ExistingCollector.(*prometheus.GaugeVec)
+		} else {
+			panic(err)
+		}
+	}
+
+	if err := prometheus.Register(csc); err != nil {
+		if are, ok := err.(prometheus.AlreadyRegisteredError); ok {
+			currentStatusCode = are.ExistingCollector.(prometheus.Gauge)
+		} else {
+			panic(err)
+		}
+	}
+
+	if err := prometheus.Register(cet); err != nil {
+		if are, ok := err.(prometheus.AlreadyRegisteredError); ok {
+			checkExecutionTime = are.ExistingCollector.(*prometheus.SummaryVec)
+		} else {
+			panic(err)
+		}
+	}
 }
