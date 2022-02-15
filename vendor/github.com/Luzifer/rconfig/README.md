@@ -1,7 +1,8 @@
 [![Build Status](https://travis-ci.org/Luzifer/rconfig.svg?branch=master)](https://travis-ci.org/Luzifer/rconfig)
-[![License: Apache v2.0](https://badge.luzifer.io/v1/badge?color=5d79b5&title=license&text=Apache+v2.0)](http://www.apache.org/licenses/LICENSE-2.0)
-[![Documentation](https://badge.luzifer.io/v1/badge?title=godoc&text=reference)](https://godoc.org/github.com/Luzifer/rconfig)
-[![Go Report](http://goreportcard.com/badge/Luzifer/rconfig)](http://goreportcard.com/report/Luzifer/rconfig)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Luzifer/rconfig)](https://goreportcard.com/report/github.com/Luzifer/rconfig)
+[![Documentation](https://badges.fyi/static/godoc/reference/5272B4)](https://godoc.org/github.com/Luzifer/rconfig)
+![](https://badges.fyi/github/license/Luzifer/rconfig)
+[![](https://badges.fyi/github/latest-tag/Luzifer/rconfig)](https://gopkg.in/Luzifer/rconfig.v2)
 
 ## Description
 
@@ -18,7 +19,7 @@ go get -u github.com/Luzifer/rconfig
 OR fetch a specific version:
 
 ```
-go get -u gopkg.in/luzifer/rconfig.v1
+go get -u gopkg.in/luzifer/rconfig.v2
 ```
 
 Run tests by running:
@@ -29,34 +30,31 @@ go test -v -race -cover github.com/Luzifer/rconfig
 
 ## Usage
 
-As a first step define a struct holding your configuration:
+A very simple usecase is to just configure a struct inside the vars section of your `main.go` and to parse the commandline flags from the `main()` function:
 
 ```go
-type config struct {
-  Username string `default:"unknown" flag:"user" description:"Your name"`
-  Details  struct {
-    Age int `default:"25" flag:"age" env:"age" description:"Your age"`
-  }
-}
-```
+package main
 
-Next create an instance of that struct and let `rconfig` fill that config:
+import (
+  "fmt"
+  "github.com/Luzifer/rconfig"
+)
 
-```go
-var cfg config
-func init() {
-  cfg = config{}
-  rconfig.Parse(&cfg)
-}
-```
+var (
+  cfg = struct {
+    Username string `default:"unknown" flag:"user" description:"Your name"`
+    Details  struct {
+      Age int `default:"25" flag:"age" env:"age" description:"Your age"`
+    }
+  }{}
+)
 
-You're ready to access your configuration:
-
-```go
 func main() {
+  rconfig.Parse(&cfg)
+
   fmt.Printf("Hello %s, happy birthday for your %dth birthday.",
-		cfg.Username,
-		cfg.Details.Age)
+    cfg.Username,
+    cfg.Details.Age)
 }
 ```
 
@@ -72,18 +70,14 @@ The order of the directives (lower number = higher precedence):
 1. `default` tag in the struct
 
 ```go
-type config struct {
+var cfg = struct {
   Username string `vardefault:"username" flag:"username" description:"Your username"`
 }
 
-var cfg = config{}
-
-func init() {
+func main() {
   rconfig.SetVariableDefaults(rconfig.VarDefaultsFromYAMLFile("~/.myapp.yml"))
   rconfig.Parse(&cfg)
-}
 
-func main() {
   fmt.Printf("Username = %s", cfg.Username)
   // Output: Username = luzifer
 }

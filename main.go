@@ -18,7 +18,7 @@ import (
 
 	"github.com/Luzifer/rconfig"
 	"github.com/gorilla/mux"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/robfig/cron"
 	"golang.org/x/net/context"
 	"gopkg.in/yaml.v2"
@@ -122,7 +122,7 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/status", handleELBHealthCheck)
-	r.Handle("/metrics", prometheus.Handler())
+	r.Handle("/metrics", promhttp.Handler())
 	http.ListenAndServe(cfg.Listen, r)
 }
 
