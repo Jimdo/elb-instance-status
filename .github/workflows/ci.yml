@@ -9,20 +9,11 @@ jobs:
   build:
     permissions:
       id-token: write
-      contents: read
+      contents: write
 
     runs-on: ubuntu-latest
 
     steps:
-    - name: Get credentials
-      uses: hashicorp/vault-action@v2.4.0
-      with:
-        url: https://vault.jimdo-platform.net
-        method: jwt
-        role: wonderland_travis_migration
-        secrets: |
-          secret/wonderland/github-publish GITHUB_TOKEN ;
-          
     - uses: actions/checkout@v2
 
     - uses: actions/setup-go@v2
@@ -34,4 +25,9 @@ jobs:
 
     - name: Release
       if: startsWith(github.ref, 'refs/tags/v')
-      run: make release
+      uses: goreleaser/goreleaser-action@v2
+      with:
+        version: latest
+        args: release --rm-dist
+      env:
+        GITHUB_TOKEN: ${{ github.token }}

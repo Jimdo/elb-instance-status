@@ -1,10 +1,10 @@
 builds:
-  - 
+  -
     goos:
       - linux
     goarch:
       - amd64
-archive:
-  name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+archives:
+- name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
   format: binary
 
